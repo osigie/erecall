@@ -37,6 +37,7 @@ public class ExpenseDocument {
     @Column(name = "processing_status", nullable = false, length = 50)
     private DocumentProcessingStatus processingStatus;
 
+    @Setter
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User creator;

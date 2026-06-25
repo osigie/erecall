@@ -4,7 +4,9 @@ import com.osigie.erecall.domain.valueObjects.ExpenseExtraction;
 import com.osigie.erecall.service.ExtractionService;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.stereotype.Service;
 
+@Service
 public class ExtractionServiceImpl implements ExtractionService {
     private final ChatClient chatClient;
 
