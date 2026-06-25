@@ -45,7 +45,7 @@ public class User implements UserDetails {
         this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at")
     private OffsetDateTime updatedAt;
 
     @PreUpdate

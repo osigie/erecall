@@ -29,7 +29,7 @@ public class ExpenseDocument {
     @Column(name = "raw_text", columnDefinition = "TEXT")
     private String rawText;
 
-    @Column(name = "file_url", nullable = false)
+    @Column(name = "file_url")
     private String fileUrl;
 
     @Setter
