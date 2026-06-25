@@ -32,6 +32,11 @@ spring:
         collection-name: expenses
         use-tls: false
         initialize-schema: true
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema:  always
 
 
 app:
