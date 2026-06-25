@@ -39,7 +39,7 @@ public class Expense {
     @Enumerated(EnumType.STRING)
     private ExpenseCategory category;
 
-    @Column(name = "merchant", nullable = false, length = 100)
+    @Column(name = "merchant", length = 100)
     private String merchant;
 
     @Column(name = "expense_date", nullable = false)
