@@ -1,5 +1,7 @@
 package com.osigie.erecall.service;
 
+import com.osigie.erecall.domain.valueObjects.ExpenseExtraction;
+
 public interface ExtractionService {
     //convert unstructured text into structured expense data
     /*
@@ -16,6 +18,6 @@ public interface ExtractionService {
      *
      * */
 
-    String extract(String text);
+    ExpenseExtraction extract(String text);
 
 }
