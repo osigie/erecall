@@ -17,7 +17,7 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -76,9 +76,9 @@ public class ExpenseToolsImpl implements ExpenseTools {
             Use when the user specifies a time period like 'this month', 'last week', 'in June', or any date range.
             """)
     public List<String> getExpensesByDateRange(
-            @ToolParam(description = "Start date of the range (inclusive)") LocalDate startDate,
-            @ToolParam(description = "End date of the range (inclusive)") LocalDate endDate) {
-        return expenseRepository.findByDateBetween(startDate, endDate)
+            @ToolParam(description = "Start date of the range (inclusive)") OffsetDateTime startDate,
+            @ToolParam(description = "End date of the range (inclusive)") OffsetDateTime endDate) {
+        return expenseRepository.findByExpenseDateBetween(startDate, endDate)
                 .stream()
                 .map(e -> "%s | %s | %s | %s | %s".formatted(
                         e.getExpenseDate(), e.getMerchant(), e.getCategory(),

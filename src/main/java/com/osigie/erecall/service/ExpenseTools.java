@@ -5,13 +5,14 @@ import org.springframework.ai.chat.model.ToolContext;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface ExpenseTools {
 
     String saveExpense(String rawText, ToolContext toolContext);
 
-    List<String> getExpensesByDateRange(LocalDate startDate, LocalDate endDate);
+    List<String> getExpensesByDateRange(OffsetDateTime startDate, OffsetDateTime endDate);
 
     List<String> searchDatabase(ExpenseCategory category, String merchant, BigDecimal amount);
 
