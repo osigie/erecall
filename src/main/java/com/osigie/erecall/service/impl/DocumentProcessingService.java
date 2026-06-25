@@ -41,7 +41,7 @@ public class DocumentProcessingService {
         try {
             updateStatus(document, DocumentProcessingStatus.PROCESSING);
             String text = fileExtractionService.extractText(document.getFileUrl());
-            expenseService.query(text, document.getCreator().getId());
+            expenseService.query(text, document.getCreator().getId(), document.getId());
             updateStatus(document, DocumentProcessingStatus.PROCESSED);
         } catch (Exception e) {
             log.error("Failed to process document {}", event.documentId(), e);
