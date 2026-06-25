@@ -2,14 +2,13 @@ package com.osigie.erecall.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -38,13 +37,22 @@ public class User implements UserDetails {
     @Column(name = "email_verified", nullable = false)
     private Boolean emailVerified = false;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
+    private OffsetDateTime createdAt;
 
-    @UpdateTimestamp
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
     @Column(name = "updated_at", nullable = false)
-    private Instant updatedAt;
+    private OffsetDateTime updatedAt;
+
+    @PreUpdate
+    public void preUpdate() {
+        this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
 
     @Builder
     public User(String email, String passwordHash, Role role) {
