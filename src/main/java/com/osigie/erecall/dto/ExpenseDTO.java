@@ -6,7 +6,7 @@ import com.osigie.erecall.domain.entity.ExpenseDocument;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 public class ExpenseDTO {
@@ -22,7 +22,7 @@ public class ExpenseDTO {
 
     public record StatusResponse(UUID documentId, DocumentProcessingStatus status, ExpenseData expense) {}
 
-    public record ExpenseData(UUID id, BigDecimal amount, String merchant, String category, String description, OffsetDateTime expenseDate) {
+    public record ExpenseData(UUID id, BigDecimal amount, String merchant, String category, String description, LocalDateTime expenseDate) {
         public static ExpenseData from(com.osigie.erecall.domain.entity.Expense expense) {
             return new ExpenseData(
                     expense.getId(),

@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.UUID;
@@ -43,10 +44,10 @@ public class Expense {
     private String merchant;
 
     @Column(name = "expense_date", nullable = false)
-    private OffsetDateTime expenseDate;
+    private LocalDateTime expenseDate;
 
     @Builder
-    public Expense(ExpenseCategory category, String description, BigDecimal amount, String merchant, OffsetDateTime expenseDate, ExpenseDocument expenseDocument) {
+    public Expense(ExpenseCategory category, String description, BigDecimal amount, String merchant, LocalDateTime expenseDate, ExpenseDocument expenseDocument) {
         this.category = category;
         this.description = description;
         this.amount = amount;

@@ -16,7 +16,8 @@ import org.springframework.data.domain.Example;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -51,20 +52,22 @@ public class ExpenseToolsImpl implements ExpenseTools {
                 .amount(amount)
                 .merchant(merchant)
                 .description(description)
-                .expenseDate(OffsetDateTime.now())
+                .expenseDate(LocalDateTime.now())
                 .expenseDocument(document)
                 .build();
 
         expenseRepository.save(expense);
 
-        vectorStore.add(List.of(
-                new Document(description,
-                        Map.of("expenseId", expense.getId().toString(),
-                                "merchant", expense.getMerchant(),
-                                "category", expense.getCategory().name(),
-                                "amount", expense.getAmount().doubleValue(),
-                                "description", expense.getDescription()
-                        ))));
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("expenseId", expense.getId().toString());
+        metadata.put("category", expense.getCategory().name());
+        metadata.put("amount", expense.getAmount().doubleValue());
+        metadata.put("description", expense.getDescription());
+        if (expense.getMerchant() != null) {
+            metadata.put("merchant", expense.getMerchant());
+        }
+
+        vectorStore.add(List.of(new Document(description, metadata)));
 
         if (merchant != null) {
             return "Saved %s at %s for %s under %s".formatted(description, merchant, amount, category);
@@ -77,8 +80,8 @@ public class ExpenseToolsImpl implements ExpenseTools {
             Use when the user specifies a time period like 'this month', 'last week', 'in June', or any date range.
             """)
     public List<String> getExpensesByDateRange(
-            @ToolParam(description = "Start date of the range (inclusive)") OffsetDateTime startDate,
-            @ToolParam(description = "End date of the range (inclusive)") OffsetDateTime endDate) {
+            @ToolParam(description = "Start of range (inclusive) — use start of day, e.g. 2024-01-15T00:00:00 for January 15") LocalDateTime startDate,
+            @ToolParam(description = "End of range (inclusive) — use end of day, e.g. 2024-01-15T23:59:59 for January 15") LocalDateTime endDate) {
         return expenseRepository.findByExpenseDateBetween(startDate, endDate)
                 .stream()
                 .map(e -> "%s | %s | %s | %s | %s".formatted(
