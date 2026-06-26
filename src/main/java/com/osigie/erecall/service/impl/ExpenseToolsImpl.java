@@ -6,6 +6,8 @@ import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.ExpenseRepository;
 import com.osigie.erecall.service.ExpenseTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
@@ -25,6 +27,7 @@ import java.util.UUID;
 
 @Service
 public class ExpenseToolsImpl implements ExpenseTools {
+    private static final Logger log = LoggerFactory.getLogger(ExpenseToolsImpl.class);
     private final ExpenseRepository expenseRepository;
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final VectorStore vectorStore;
@@ -36,6 +39,11 @@ public class ExpenseToolsImpl implements ExpenseTools {
         this.vectorStore = vectorStore;
     }
 
+    private static String logCtx(ToolContext ctx) {
+        return "documentId=%s, userId=%s".formatted(
+                ctx.getContext().get("documentId"), ctx.getContext().get("userId"));
+    }
+
     @Override
     @Tool(description = "Save a new expense. Use when the user is recording, adding, or logging an expense.")
     public String saveExpense(
@@ -44,7 +52,13 @@ public class ExpenseToolsImpl implements ExpenseTools {
             @ToolParam(description = "What the expense was for, e.g. 'Netflix monthly subscription'") String description,
             @ToolParam(description = "Category of the expense, e.g. ENTERTAINMENT, GROCERIES") ExpenseCategory category,
             ToolContext toolContext) {
+
         UUID documentId = (UUID) toolContext.getContext().get("documentId");
+
+        log.info("saveExpense called: {}, amount={}, description={}, category={}, merchant={}",
+                logCtx(toolContext), amount, description, category, merchant);
+
+
         ExpenseDocument document = expenseDocumentRepository.findById(documentId).orElseThrow();
 
         Expense expense = Expense.builder()
@@ -81,7 +95,10 @@ public class ExpenseToolsImpl implements ExpenseTools {
             """)
     public List<String> getExpensesByDateRange(
             @ToolParam(description = "Start of range (inclusive) — use start of day, e.g. 2024-01-15T00:00:00 for January 15") LocalDateTime startDate,
-            @ToolParam(description = "End of range (inclusive) — use end of day, e.g. 2024-01-15T23:59:59 for January 15") LocalDateTime endDate) {
+            @ToolParam(description = "End of range (inclusive) — use end of day, e.g. 2024-01-15T23:59:59 for January 15") LocalDateTime endDate,
+            ToolContext toolContext) {
+        log.info("getExpensesByDateRange called: {}, start={}, end={}",
+                logCtx(toolContext), startDate, endDate);
         return expenseRepository.findByExpenseDateBetween(startDate, endDate)
                 .stream()
                 .map(e -> "%s | %s | %s | %s | %s".formatted(
@@ -95,7 +112,10 @@ public class ExpenseToolsImpl implements ExpenseTools {
     public List<String> searchDatabase(
             @ToolParam(description = "Expense category filter (e.g. GROCERIES, DINING_OUT, ENTERTAINMENT)") ExpenseCategory category,
             @ToolParam(description = "Merchant name to search for (partial match)") String merchant,
-            @ToolParam(description = "Exact expense amount to match") BigDecimal amount) {
+            @ToolParam(description = "Exact expense amount to match") BigDecimal amount,
+            ToolContext toolContext) {
+        log.info("searchDatabase called: {}, category={}, merchant={}, amount={}",
+                logCtx(toolContext), category, merchant, amount);
         Expense probe = Expense.builder()
                 .merchant(merchant != null && !merchant.isBlank() ? merchant : null)
                 .category(category)
@@ -112,7 +132,9 @@ public class ExpenseToolsImpl implements ExpenseTools {
     }
 
     @Tool(description = "Semantic search over expense descriptions for natural language queries")
-    public List<String> searchVector(@ToolParam(description = "Natural language description to search for, e.g. 'things I bought at the grocery store'") String query) {
+    public List<String> searchVector(@ToolParam(description = "Natural language description to search for, e.g. 'things I bought at the grocery store'") String query, ToolContext toolContext) {
+        log.info("searchVector called: {}, query={}",
+                logCtx(toolContext), query);
         return vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(5).build()).stream().map(Document::getText).toList();
     }
 

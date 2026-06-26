@@ -49,7 +49,7 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .user(text)
                 .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
                 .tools(tools)
-                .toolContext(Map.of("documentId", documentId))
+                .toolContext(Map.of("documentId", documentId,  "userId", userId.toString()))
                 .call()
                 .content();
     }

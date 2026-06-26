@@ -11,9 +11,9 @@ public interface ExpenseTools {
 
     String saveExpense(String merchant, BigDecimal amount, String description, ExpenseCategory category, ToolContext toolContext);
 
-    List<String> getExpensesByDateRange(LocalDateTime startDate, LocalDateTime endDate);
+    List<String> getExpensesByDateRange(LocalDateTime startDate, LocalDateTime endDate, ToolContext toolContext);
 
-    List<String> searchDatabase(ExpenseCategory category, String merchant, BigDecimal amount);
+    List<String> searchDatabase(ExpenseCategory category, String merchant, BigDecimal amount, ToolContext toolContext);
 
-    List<String> searchVector(String query);
+    List<String> searchVector(String query, ToolContext toolContext);
 }
