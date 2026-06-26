@@ -1,6 +1,7 @@
 package com.osigie.erecall.service.impl;
 
 import com.osigie.erecall.domain.DocumentProcessingStatus;
+import com.osigie.erecall.domain.DocumentType;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.event.DocumentSavedEvent;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
@@ -39,8 +40,7 @@ public class DocumentProcessingService {
         }
 
         try {
-            updateStatus(document, DocumentProcessingStatus.PROCESSING);
-            String text = fileExtractionService.extractText(document.getFileUrl());
+            String text = extractText(document);
             expenseService.query(text, document.getCreator().getId(), document.getId());
             updateStatus(document, DocumentProcessingStatus.PROCESSED);
         } catch (Exception e) {
@@ -52,5 +52,13 @@ public class DocumentProcessingService {
     private void updateStatus(ExpenseDocument document, DocumentProcessingStatus status) {
         document.setProcessingStatus(status);
         expenseDocumentRepository.save(document);
+    }
+
+    private String extractText(ExpenseDocument document) {
+        if (document.getType() == DocumentType.PDF) {
+            updateStatus(document, DocumentProcessingStatus.PROCESSING);
+            return fileExtractionService.extractText(document.getFileUrl());
+        }
+        return document.getRawText();
     }
 }

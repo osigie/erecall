@@ -6,6 +6,7 @@ import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.ExpenseRepository;
 import com.osigie.erecall.service.ExpenseTools;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.model.ToolContext;
@@ -26,8 +27,9 @@ import java.util.UUID;
 
 
 @Service
+//TODO: explore the logging advice later
+@Slf4j
 public class ExpenseToolsImpl implements ExpenseTools {
-    private static final Logger log = LoggerFactory.getLogger(ExpenseToolsImpl.class);
     private final ExpenseRepository expenseRepository;
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final VectorStore vectorStore;

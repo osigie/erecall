@@ -25,7 +25,6 @@ import java.util.UUID;
 @Slf4j
 public class ExpenseServiceImpl implements ExpenseService {
 
-
     private final ChatClient chatClient;
     private final ExpenseTools tools;
     private final ExpenseDocumentRepository expenseDocumentRepository;
@@ -33,9 +32,9 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final ApplicationEventPublisher eventPublisher;
 
     public ExpenseServiceImpl(ChatClient chatClient, ExpenseTools tools,
-                              ExpenseDocumentRepository expenseDocumentRepository,
-                              ExpenseRepository expenseRepository,
-                              ApplicationEventPublisher eventPublisher) {
+                               ExpenseDocumentRepository expenseDocumentRepository,
+                               ExpenseRepository expenseRepository,
+                               ApplicationEventPublisher eventPublisher) {
         this.chatClient = chatClient;
         this.tools = tools;
         this.expenseDocumentRepository = expenseDocumentRepository;
@@ -49,7 +48,7 @@ public class ExpenseServiceImpl implements ExpenseService {
                 .user(text)
                 .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
                 .tools(tools)
-                .toolContext(Map.of("documentId", documentId,  "userId", userId.toString()))
+                .toolContext(Map.of("documentId", documentId, "userId", userId.toString()))
                 .call()
                 .content();
     }
@@ -60,33 +59,17 @@ public class ExpenseServiceImpl implements ExpenseService {
         document = expenseDocumentRepository.save(document);
 
         return switch (document.getType()) {
-            case TEXT -> processTextDocument(document);
-            case PDF -> processPdfDocument(document);
+            case TEXT -> emit(document, DocumentProcessingStatus.PROCESSING);
+            case PDF -> emit(document, DocumentProcessingStatus.PENDING);
             default -> throw new BadRequestException("Document type not supported: " + document.getType());
         };
     }
 
-    private SubmitResponse processTextDocument(ExpenseDocument document) {
-        updateStatus(document, DocumentProcessingStatus.PROCESSING);
-        try {
-            String response = query(document.getRawText(), document.getCreator().getId(), document.getId());
-            updateStatus(document, DocumentProcessingStatus.PROCESSED);
-            return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSED, response);
-        } catch (RuntimeException e) {
-            log.error("Failed to process TEXT document {}", document.getId(), e);
-            updateStatus(document, DocumentProcessingStatus.FAILED);
-            return new SubmitResponse(document.getId(), DocumentProcessingStatus.FAILED, null);
-        }
-    }
-
-    private SubmitResponse processPdfDocument(ExpenseDocument document) {
-        eventPublisher.publishEvent(new DocumentSavedEvent(document.getId(), document.getCreator().getId()));
-        return new SubmitResponse(document.getId(), DocumentProcessingStatus.PENDING, null);
-    }
-
-    private void updateStatus(ExpenseDocument document, DocumentProcessingStatus status) {
+    private SubmitResponse emit(ExpenseDocument document, DocumentProcessingStatus status) {
         document.setProcessingStatus(status);
         expenseDocumentRepository.save(document);
+        eventPublisher.publishEvent(new DocumentSavedEvent(document.getId(), document.getCreator().getId()));
+        return new SubmitResponse(document.getId(), status, null);
     }
 
     @Override
