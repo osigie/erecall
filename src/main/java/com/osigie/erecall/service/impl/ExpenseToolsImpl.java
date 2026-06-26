@@ -41,7 +41,6 @@ public class ExpenseToolsImpl implements ExpenseTools {
             @ToolParam(required = false, description = "Merchant or vendor name, e.g. Netflix, Shell, Walmart") String merchant,
             @ToolParam(description = "Amount paid, e.g. 500, 29.99") BigDecimal amount,
             @ToolParam(description = "What the expense was for, e.g. 'Netflix monthly subscription'") String description,
-            @ToolParam(required = false, description = "Date the expense occurred (ISO-8601). Defaults to today if not provided.") OffsetDateTime expenseDate,
             @ToolParam(description = "Category of the expense, e.g. ENTERTAINMENT, GROCERIES") ExpenseCategory category,
             ToolContext toolContext) {
         UUID documentId = (UUID) toolContext.getContext().get("documentId");
@@ -52,7 +51,7 @@ public class ExpenseToolsImpl implements ExpenseTools {
                 .amount(amount)
                 .merchant(merchant)
                 .description(description)
-                .expenseDate(expenseDate != null ? expenseDate : OffsetDateTime.now())
+                .expenseDate(OffsetDateTime.now())
                 .expenseDocument(document)
                 .build();
 
@@ -60,12 +59,11 @@ public class ExpenseToolsImpl implements ExpenseTools {
 
         vectorStore.add(List.of(
                 new Document(description,
-                        Map.of("expenseId", expense.getId(),
+                        Map.of("expenseId", expense.getId().toString(),
                                 "merchant", expense.getMerchant(),
-                                "category", expense.getCategory(),
-                                "amount", expense.getAmount(),
-                                "description", expense.getDescription(),
-                                "date", expense.getExpenseDate()
+                                "category", expense.getCategory().name(),
+                                "amount", expense.getAmount().doubleValue(),
+                                "description", expense.getDescription()
                         ))));
 
         if (merchant != null) {

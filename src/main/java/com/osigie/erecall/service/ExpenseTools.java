@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface ExpenseTools {
 
-    String saveExpense(String merchant, BigDecimal amount, String description, OffsetDateTime expenseDate, ExpenseCategory category, ToolContext toolContext);
+    String saveExpense(String merchant, BigDecimal amount, String description, ExpenseCategory category, ToolContext toolContext);
 
     List<String> getExpensesByDateRange(OffsetDateTime startDate, OffsetDateTime endDate);
 
