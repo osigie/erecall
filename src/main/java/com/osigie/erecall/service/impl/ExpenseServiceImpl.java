@@ -47,7 +47,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     public String query(String text, UUID userId, UUID documentId) {
         return chatClient.prompt()
                 .user(text)
-                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId)))
+                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
                 .tools(tools)
                 .toolContext(Map.of("documentId", documentId))
                 .call()

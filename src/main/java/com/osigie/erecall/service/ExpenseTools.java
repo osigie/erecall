@@ -4,13 +4,12 @@ import com.osigie.erecall.domain.ExpenseCategory;
 import org.springframework.ai.chat.model.ToolContext;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
 public interface ExpenseTools {
 
-    String saveExpense(String rawText, ToolContext toolContext);
+    String saveExpense(String merchant, BigDecimal amount, String description, OffsetDateTime expenseDate, ExpenseCategory category, ToolContext toolContext);
 
     List<String> getExpensesByDateRange(OffsetDateTime startDate, OffsetDateTime endDate);
 

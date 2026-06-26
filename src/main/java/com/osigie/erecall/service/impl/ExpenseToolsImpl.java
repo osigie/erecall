@@ -3,7 +3,6 @@ package com.osigie.erecall.service.impl;
 import com.osigie.erecall.domain.ExpenseCategory;
 import com.osigie.erecall.domain.entity.Expense;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
-import com.osigie.erecall.domain.valueObjects.ExpenseExtraction;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.ExpenseRepository;
 import com.osigie.erecall.service.ExpenseTools;
@@ -25,50 +24,54 @@ import java.util.UUID;
 
 @Service
 public class ExpenseToolsImpl implements ExpenseTools {
-    private final ExtractionServiceImpl extractionService;
     private final ExpenseRepository expenseRepository;
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final VectorStore vectorStore;
 
 
-    public ExpenseToolsImpl(ExtractionServiceImpl extractionService, ExpenseRepository expenseRepository, ExpenseDocumentRepository expenseDocumentRepository, VectorStore vectorStore) {
-        this.extractionService = extractionService;
+    public ExpenseToolsImpl(ExpenseRepository expenseRepository, ExpenseDocumentRepository expenseDocumentRepository, VectorStore vectorStore) {
         this.expenseRepository = expenseRepository;
         this.expenseDocumentRepository = expenseDocumentRepository;
         this.vectorStore = vectorStore;
     }
 
     @Override
-    @Tool(description = "Save a new expense from raw text input. Use when the user is recording, adding, or logging an expense.")
-    public String saveExpense(@ToolParam(description = "Raw text describing the expense, e.g. 'paid netflix 500'") String rawText, ToolContext toolContext) {
+    @Tool(description = "Save a new expense. Use when the user is recording, adding, or logging an expense.")
+    public String saveExpense(
+            @ToolParam(required = false, description = "Merchant or vendor name, e.g. Netflix, Shell, Walmart") String merchant,
+            @ToolParam(description = "Amount paid, e.g. 500, 29.99") BigDecimal amount,
+            @ToolParam(description = "What the expense was for, e.g. 'Netflix monthly subscription'") String description,
+            @ToolParam(required = false, description = "Date the expense occurred (ISO-8601). Defaults to today if not provided.") OffsetDateTime expenseDate,
+            @ToolParam(description = "Category of the expense, e.g. ENTERTAINMENT, GROCERIES") ExpenseCategory category,
+            ToolContext toolContext) {
         UUID documentId = (UUID) toolContext.getContext().get("documentId");
         ExpenseDocument document = expenseDocumentRepository.findById(documentId).orElseThrow();
 
-        ExpenseExtraction expenseExtraction = extractionService.extract(rawText);
-
         Expense expense = Expense.builder()
-//              TODO: think of how to allow llm use from my enum category
-//              .category(expenseExtraction.category())
-                .category(ExpenseCategory.MISCELLANEOUS)
-                .amount(expenseExtraction.amount())
-                .description(expenseExtraction.description())
-                .expenseDate(expenseExtraction.date())
+                .category(category)
+                .amount(amount)
+                .merchant(merchant)
+                .description(description)
+                .expenseDate(expenseDate != null ? expenseDate : OffsetDateTime.now())
                 .expenseDocument(document)
                 .build();
 
         expenseRepository.save(expense);
 
         vectorStore.add(List.of(
-                new Document(rawText,
+                new Document(description,
                         Map.of("expenseId", expense.getId(),
-                                "merchant", expense.getMerchant()
-                                , "category", expense.getCategory()
-                                , "amount", expense.getAmount()
-                                , "description", expense.getDescription(),
+                                "merchant", expense.getMerchant(),
+                                "category", expense.getCategory(),
+                                "amount", expense.getAmount(),
+                                "description", expense.getDescription(),
                                 "date", expense.getExpenseDate()
                         ))));
 
-        return "Saved Merchant: %s, Category: %s, Description: %s, Amount: %s".formatted(expenseExtraction.category(), expenseExtraction.category(), expenseExtraction.description(), expenseExtraction.amount());
+        if (merchant != null) {
+            return "Saved %s at %s for %s under %s".formatted(description, merchant, amount, category);
+        }
+        return "Saved %s for %s under %s".formatted(description, amount, category);
     }
 
     @Tool(description = """
@@ -111,4 +114,5 @@ public class ExpenseToolsImpl implements ExpenseTools {
     public List<String> searchVector(@ToolParam(description = "Natural language description to search for, e.g. 'things I bought at the grocery store'") String query) {
         return vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(5).build()).stream().map(Document::getText).toList();
     }
+
 }
