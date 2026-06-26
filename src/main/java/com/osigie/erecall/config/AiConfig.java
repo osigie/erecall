@@ -49,6 +49,9 @@ public class AiConfig {
                         - If the user asks a follow-up question, check memory before calling a tool.
                         - If a question can be answered from memory or already retrieved data, do not call a tool again.
                         - For ambiguous input, ask for clarification before saving.
+                        - When saving an expense, do NOT ask for a date if one is not provided — the system will default to today's date.
+                        - When saving an expense, do NOT ask for a merchant name if one is not provided — merchant is optional.
+                        - Always infer the category from the available options: GROCERIES, DINING_OUT, FUEL, TRANSIT, RENT, UTILITIES, HEALTHCARE, ENTERTAINMENT, WORK_EXPENSES, MISCELLANEOUS. Do NOT ask the user for the category.
                         - Always respond in a clear, concise, friendly tone.
                         """)
                 .defaultAdvisors(
