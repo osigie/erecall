@@ -5,6 +5,7 @@ import com.osigie.erecall.domain.entity.Expense;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.ExpenseRepository;
+import com.osigie.erecall.repo.spec.ExpenseSpecification;
 import com.osigie.erecall.service.ExpenseTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ToolContext;
@@ -13,7 +14,7 @@ import org.springframework.ai.tool.annotation.Tool;
 import org.springframework.ai.tool.annotation.ToolParam;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.data.domain.Example;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -54,6 +55,7 @@ public class ExpenseToolsImpl implements ExpenseTools {
             ToolContext toolContext) {
 
         UUID documentId = (UUID) toolContext.getContext().get("documentId");
+        UUID userId = (UUID) toolContext.getContext().get("userId");
 
         log.info("saveExpense called: {}, amount={}, description={}, category={}, merchant={}",
                 logCtx(toolContext), amount, description, category, merchant);
@@ -77,6 +79,8 @@ public class ExpenseToolsImpl implements ExpenseTools {
         metadata.put("category", expense.getCategory().name());
         metadata.put("amount", expense.getAmount().doubleValue());
         metadata.put("description", expense.getDescription());
+        metadata.put("userId", userId.toString());
+
         if (expense.getMerchant() != null) {
             metadata.put("merchant", expense.getMerchant());
         }
@@ -99,7 +103,9 @@ public class ExpenseToolsImpl implements ExpenseTools {
             ToolContext toolContext) {
         log.info("getExpensesByDateRange called: {}, start={}, end={}",
                 logCtx(toolContext), startDate, endDate);
-        return expenseRepository.findByExpenseDateBetween(startDate, endDate)
+
+        UUID userId = (UUID) toolContext.getContext().get("userId");
+        return expenseRepository.findByExpenseDocumentCreatorIdAndExpenseDateBetween(userId, startDate, endDate)
                 .stream()
                 .map(e -> "%s | %s | %s | %s | %s".formatted(
                         e.getExpenseDate(), e.getMerchant(), e.getCategory(),
@@ -108,7 +114,17 @@ public class ExpenseToolsImpl implements ExpenseTools {
     }
 
     @Override
-    @Tool(description = "Search expenses. All parameters are optional and will be combined.")
+    @Tool(description = """
+            Search expenses belonging ONLY to the current user.
+            
+            Optional filters:
+            - category → expense category
+            - merchant → merchant/store name
+            - amount → exact amount spent
+            
+            Use this when the user wants to find expenses
+            matching specific criteria.
+            """)
     public List<String> searchDatabase(
             @ToolParam(description = "Expense category filter (e.g. GROCERIES, DINING_OUT, ENTERTAINMENT)") ExpenseCategory category,
             @ToolParam(description = "Merchant name to search for (partial match)") String merchant,
@@ -116,15 +132,15 @@ public class ExpenseToolsImpl implements ExpenseTools {
             ToolContext toolContext) {
         log.info("searchDatabase called: {}, category={}, merchant={}, amount={}",
                 logCtx(toolContext), category, merchant, amount);
-        Expense probe = Expense.builder()
-                .merchant(merchant != null && !merchant.isBlank() ? merchant : null)
-                .category(category)
-                .amount(amount)
-                .build();
 
-        Example<Expense> example = Example.of(probe);
+        UUID userId = (UUID) toolContext.getContext().get("userId");
 
-        return expenseRepository.findAll(example).stream()
+        Specification<Expense> spec = Specification.where(ExpenseSpecification.belongsToUser(userId))
+                .and(ExpenseSpecification.hasAmount(amount))
+                .and(ExpenseSpecification.hasCategory(category))
+                .and(ExpenseSpecification.hasMerchant(merchant));
+
+        return expenseRepository.findAll(spec).stream()
                 .map(e -> "%s | %s | %s | %s".formatted(
                         e.getExpenseDate(), e.getMerchant(), e.getCategory(), e.getAmount()))
                 .toList();
@@ -135,7 +151,13 @@ public class ExpenseToolsImpl implements ExpenseTools {
     public List<String> searchVector(@ToolParam(description = "Natural language description to search for, e.g. 'things I bought at the grocery store'") String query, ToolContext toolContext) {
         log.info("searchVector called: {}, query={}",
                 logCtx(toolContext), query);
-        return vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(5).build()).stream().map(Document::getText).toList();
+
+        UUID userId = (UUID) toolContext.getContext().get("userId");
+        String filter = "userId == '%s'".formatted(userId);
+
+        return vectorStore.similaritySearch(SearchRequest.builder().query(query).topK(5)
+                .filterExpression(filter)
+                .build()).stream().map(Document::getText).toList();
     }
 
 }
