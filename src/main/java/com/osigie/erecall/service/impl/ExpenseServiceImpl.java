@@ -83,6 +83,6 @@ public class ExpenseServiceImpl implements ExpenseService {
                   .orElse(null)
                 : null;
 
-        return new StatusResponse(document.getId(), document.getProcessingStatus(), expenseData);
+        return new StatusResponse(document.getId(), document.getProcessingStatus(), document.getAiResponse(), expenseData);
     }
 }

@@ -29,6 +29,10 @@ public class ExpenseDocument {
     @Column(name = "raw_text", columnDefinition = "TEXT")
     private String rawText;
 
+    @Setter
+    @Column(name = "ai_response", columnDefinition = "TEXT")
+    private String aiResponse;
+
     @Column(name = "file_url")
     private String fileUrl;
 
@@ -52,12 +56,13 @@ public class ExpenseDocument {
 
 
     @Builder
-    public ExpenseDocument(String rawText, String fileUrl, DocumentType type, User creator) {
+    public ExpenseDocument(String aiResponse, String rawText, String fileUrl, DocumentType type, User creator) {
         this.rawText = rawText;
         this.fileUrl = fileUrl;
         this.processingStatus = DocumentProcessingStatus.PENDING;
         this.creator = creator;
         this.type = type;
+        this.aiResponse = aiResponse;
     }
 
 }

@@ -38,25 +38,25 @@ public class DocumentProcessingService {
             log.warn("Document {} not found for processing", event.documentId());
             return;
         }
-
         try {
             String text = extractText(document);
-            expenseService.query(text, document.getCreator().getId(), document.getId());
-            updateStatus(document, DocumentProcessingStatus.PROCESSED);
+            String response = expenseService.query(text, document.getCreator().getId(), document.getId());
+            updateStatus(document, DocumentProcessingStatus.PROCESSED, response);
         } catch (Exception e) {
             log.error("Failed to process document {}", event.documentId(), e);
-            updateStatus(document, DocumentProcessingStatus.FAILED);
+            updateStatus(document, DocumentProcessingStatus.FAILED, "Failed to process document");
         }
     }
 
-    private void updateStatus(ExpenseDocument document, DocumentProcessingStatus status) {
+    private void updateStatus(ExpenseDocument document, DocumentProcessingStatus status, String response) {
         document.setProcessingStatus(status);
+        document.setAiResponse(response);
         expenseDocumentRepository.save(document);
     }
 
     private String extractText(ExpenseDocument document) {
         if (document.getType() == DocumentType.PDF) {
-            updateStatus(document, DocumentProcessingStatus.PROCESSING);
+            updateStatus(document, DocumentProcessingStatus.PROCESSING, document.getAiResponse());
             return fileExtractionService.extractText(document.getFileUrl());
         }
         return document.getRawText();
