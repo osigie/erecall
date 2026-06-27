@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -32,9 +33,9 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final ApplicationEventPublisher eventPublisher;
 
     public ExpenseServiceImpl(ChatClient chatClient, ExpenseTools tools,
-                               ExpenseDocumentRepository expenseDocumentRepository,
-                               ExpenseRepository expenseRepository,
-                               ApplicationEventPublisher eventPublisher) {
+                              ExpenseDocumentRepository expenseDocumentRepository,
+                              ExpenseRepository expenseRepository,
+                              ApplicationEventPublisher eventPublisher) {
         this.chatClient = chatClient;
         this.tools = tools;
         this.expenseDocumentRepository = expenseDocumentRepository;
@@ -46,6 +47,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     public String query(String text, UUID userId, UUID documentId) {
         return chatClient.prompt()
                 .user(text)
+                .system(s -> s.params(Map.of("currentDateTime", LocalDateTime.now().toString())))
                 .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
                 .tools(tools)
                 .toolContext(Map.of("documentId", documentId, "userId", userId))
