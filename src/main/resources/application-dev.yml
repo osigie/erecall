@@ -1,0 +1,53 @@
+spring:
+  application:
+    name: erecall
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY}
+        project-id: ${GEMINI_PROJECT_ID}
+        embedding:
+          api-key: ${GEMINI_API_KEY}
+          project-id: ${GEMINI_PROJECT_ID}
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: expenses
+        use-tls: false
+        initialize-schema: true
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema:  always
+
+
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+    access-token-expiry: 604800000    # 7 days
+
+
+logging:
+  level:
+    com.osigie: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
