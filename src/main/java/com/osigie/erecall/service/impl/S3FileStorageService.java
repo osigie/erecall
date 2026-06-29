@@ -12,6 +12,7 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.S3Configuration;
 import software.amazon.awssdk.services.s3.model.ObjectCannedACL;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -34,6 +35,10 @@ public class S3FileStorageService implements FileStorageService {
         var credentials = StaticCredentialsProvider.create(
                 AwsBasicCredentials.create(properties.accessKey(), properties.secretKey()));
 
+        var s3Config = S3Configuration.builder()
+                .pathStyleAccessEnabled(true)
+                .build();
+
         this.s3Client = S3Client.builder()
                 .endpointOverride(URI.create(properties.endpoint()))
                 .credentialsProvider(credentials)
@@ -45,6 +50,7 @@ public class S3FileStorageService implements FileStorageService {
                 .endpointOverride(URI.create(properties.endpoint()))
                 .credentialsProvider(credentials)
                 .region(Region.of(properties.region()))
+                .serviceConfiguration(s3Config)
                 .build();
     }
 
@@ -78,7 +84,7 @@ public class S3FileStorageService implements FileStorageService {
     @Override
     public String generatePresignedUrl(String key, Duration expiration) {
         try {
-            GetObjectPresignRequest presignRequest = GetObjectPresignRequest.builder()
+            var presignRequest = GetObjectPresignRequest.builder()
                     .signatureDuration(expiration)
                     .getObjectRequest(r -> r.bucket(bucketName).key(key))
                     .build();
