@@ -9,9 +9,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ExpenseService {
-    String query(String text, UUID userId, UUID documentId);
+    String query(String text, User user, UUID documentId);
 
-    String queryWithMedia(String text, List<Media> media, UUID userId, UUID documentId);
+    String queryWithMedia(String text, List<Media> media, User user, UUID documentId);
 
     ExpenseDTO.SubmitResponse saveExpenseDocument(ExpenseDocument document);
 

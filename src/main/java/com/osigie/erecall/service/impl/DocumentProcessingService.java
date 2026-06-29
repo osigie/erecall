@@ -2,8 +2,12 @@ package com.osigie.erecall.service.impl;
 
 import com.osigie.erecall.domain.DocumentProcessingStatus;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
+import com.osigie.erecall.domain.entity.User;
 import com.osigie.erecall.event.DocumentSavedEvent;
+import com.osigie.erecall.exception.ResourceNotFoundException;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
+import com.osigie.erecall.repo.UserRepository;
+import com.osigie.erecall.security.AuthHelper;
 import com.osigie.erecall.service.ExpenseService;
 import com.osigie.erecall.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +30,17 @@ public class DocumentProcessingService {
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final ExpenseService expenseService;
     private final FileStorageService fileStorageService;
+    private final AuthHelper authHelper;
+    private final UserRepository userRepository;
 
     public DocumentProcessingService(ExpenseDocumentRepository expenseDocumentRepository,
                                      ExpenseService expenseService,
-                                     FileStorageService fileStorageService) {
+                                     FileStorageService fileStorageService, AuthHelper authHelper, UserRepository userRepository) {
         this.expenseDocumentRepository = expenseDocumentRepository;
         this.expenseService = expenseService;
         this.fileStorageService = fileStorageService;
+        this.authHelper = authHelper;
+        this.userRepository = userRepository;
     }
 
     @Async("documentProcessingExecutor")
@@ -43,6 +51,9 @@ public class DocumentProcessingService {
             log.warn("Document {} not found for processing", event.documentId());
             return;
         }
+
+        User user = userRepository.findById(document.getCreator().getId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
         try {
             String response;
             if (document.getFileUrl() != null && !document.getFileUrl().isBlank()) {
@@ -52,10 +63,10 @@ public class DocumentProcessingService {
                         ? document.getRawText()
                         : "Extract expense information from this document.";
                 response = expenseService.queryWithMedia(
-                        text, List.of(media), document.getCreator().getId(), document.getId());
+                        text, List.of(media), user, document.getId());
             } else {
                 response = expenseService.query(
-                        document.getRawText(), document.getCreator().getId(), document.getId());
+                        document.getRawText(), user, document.getId());
             }
             updateStatus(document, DocumentProcessingStatus.PROCESSED, response);
         } catch (Exception e) {

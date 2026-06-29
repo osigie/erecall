@@ -46,25 +46,29 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    public String query(String text, UUID userId, UUID documentId) {
+    public String query(String text, User user, UUID documentId) {
         return chatClient.prompt()
                 .user(text)
-                .system(s -> s.params(Map.of("currentDateTime", LocalDateTime.now().toString())))
-                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
+                .system(s -> s.params(Map.of("currentDateTime", LocalDateTime.now().toString(),
+                        "userName", user.getUsername()
+                )))
+                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, user.getId().toString())))
                 .tools(tools)
-                .toolContext(Map.of("documentId", documentId, "userId", userId))
+                .toolContext(Map.of("documentId", documentId, "userId", user.getId()))
                 .call()
                 .content();
     }
 
     @Override
-    public String queryWithMedia(String text, List<Media> media, UUID userId, UUID documentId) {
+    public String queryWithMedia(String text, List<Media> media, User user, UUID documentId) {
         return chatClient.prompt()
                 .user(u -> u.text(text).media(media.toArray(new Media[0])))
-                .system(s -> s.params(Map.of("currentDateTime", LocalDateTime.now().toString())))
-                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
+                .system(s -> s.params(Map.of("currentDateTime", LocalDateTime.now().toString(),
+                        "userName", user.getUsername()
+                )))
+                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, user.getId().toString())))
                 .tools(tools)
-                .toolContext(Map.of("documentId", documentId, "userId", userId))
+                .toolContext(Map.of("documentId", documentId, "userId", user.getId()))
                 .call()
                 .content();
     }

@@ -52,6 +52,7 @@ public class ExpenseToolsImpl implements ExpenseTools {
             @ToolParam(description = "Amount paid, e.g. 500, 29.99") BigDecimal amount,
             @ToolParam(description = "What the expense was for, e.g. 'Netflix monthly subscription'") String description,
             @ToolParam(description = "Category of the expense, e.g. ENTERTAINMENT, GROCERIES") ExpenseCategory category,
+            @ToolParam(required = false, description = "Date of the expense extracted from user input. Defaults to now if not provided.") LocalDateTime expenseDate,
             ToolContext toolContext) {
 
         UUID documentId = (UUID) toolContext.getContext().get("documentId");
@@ -68,7 +69,7 @@ public class ExpenseToolsImpl implements ExpenseTools {
                 .amount(amount)
                 .merchant(merchant)
                 .description(description)
-                .expenseDate(LocalDateTime.now())
+                .expenseDate(expenseDate != null ? expenseDate : LocalDateTime.now())
                 .expenseDocument(document)
                 .build();
 
