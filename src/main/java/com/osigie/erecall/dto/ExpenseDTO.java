@@ -21,11 +21,15 @@ public class ExpenseDTO {
         }
     }
 
-    public record SubmitResponse(UUID documentId, DocumentProcessingStatus status, String responseText) {}
+    public record SubmitResponse(UUID documentId, DocumentProcessingStatus status) {
+    }
 
-    public record StatusResponse(UUID documentId, DocumentProcessingStatus status, String aiResponse, ExpenseData expense) {}
+    public record StatusResponse(UUID documentId, DocumentProcessingStatus status, String aiResponse,
+                                 ExpenseData expense) {
+    }
 
-    public record ExpenseData(UUID id, BigDecimal amount, String merchant, String category, String description, LocalDateTime expenseDate) {
+    public record ExpenseData(UUID id, BigDecimal amount, String merchant, String category, String description,
+                              LocalDateTime expenseDate) {
         public static ExpenseData from(com.osigie.erecall.domain.entity.Expense expense) {
             return new ExpenseData(
                     expense.getId(),

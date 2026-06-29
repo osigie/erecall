@@ -32,17 +32,14 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final ChatClient chatClient;
     private final ExpenseTools tools;
     private final ExpenseDocumentRepository expenseDocumentRepository;
-    private final ExpenseRepository expenseRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public ExpenseServiceImpl(ChatClient chatClient, ExpenseTools tools,
                               ExpenseDocumentRepository expenseDocumentRepository,
-                              ExpenseRepository expenseRepository,
                               ApplicationEventPublisher eventPublisher) {
         this.chatClient = chatClient;
         this.tools = tools;
         this.expenseDocumentRepository = expenseDocumentRepository;
-        this.expenseRepository = expenseRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -78,12 +75,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Transactional
     public SubmitResponse saveExpenseDocument(ExpenseDocument document) {
         validateDocument(document);
-
-        document = expenseDocumentRepository.save(document);
         document.setProcessingStatus(DocumentProcessingStatus.PROCESSING);
+
         expenseDocumentRepository.save(document);
-        eventPublisher.publishEvent(new DocumentSavedEvent(document.getId(), document.getCreator().getId()));
-        return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSING, null);
+
+        eventPublisher.publishEvent(document);
+
+        return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSING);
     }
 
     private void validateDocument(ExpenseDocument document) {
@@ -100,6 +98,10 @@ public class ExpenseServiceImpl implements ExpenseService {
         DocumentExpenseProjection document = expenseDocumentRepository.findByStatus(documentId, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
-        return new StatusResponse(document.documentId(), document.status(), document.aiResponse(), ExpenseData.from(document.expense()));
+        ExpenseData expenseData = document.expense() != null
+                ? ExpenseData.from(document.expense())
+                : null;
+
+        return new StatusResponse(document.documentId(), document.status(), document.aiResponse(), expenseData);
     }
 }

@@ -30,48 +30,40 @@ public class DocumentProcessingService {
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final ExpenseService expenseService;
     private final FileStorageService fileStorageService;
-    private final AuthHelper authHelper;
     private final UserRepository userRepository;
 
     public DocumentProcessingService(ExpenseDocumentRepository expenseDocumentRepository,
                                      ExpenseService expenseService,
-                                     FileStorageService fileStorageService, AuthHelper authHelper, UserRepository userRepository) {
+                                     FileStorageService fileStorageService, UserRepository userRepository) {
         this.expenseDocumentRepository = expenseDocumentRepository;
         this.expenseService = expenseService;
         this.fileStorageService = fileStorageService;
-        this.authHelper = authHelper;
         this.userRepository = userRepository;
     }
 
     @Async("documentProcessingExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    public void handleDocumentSaved(DocumentSavedEvent event) {
-        ExpenseDocument document = expenseDocumentRepository.findById(event.documentId()).orElse(null);
-        if (document == null) {
-            log.warn("Document {} not found for processing", event.documentId());
-            return;
-        }
-
-        User user = userRepository.findById(document.getCreator().getId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    public void handleDocumentSaved(ExpenseDocument event) {
+        User user = userRepository.findById(event.getCreator().getId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         try {
             String response;
-            if (document.getFileUrl() != null && !document.getFileUrl().isBlank()) {
-                String presignedUrl = fileStorageService.generatePresignedUrl(document.getFileUrl(), Duration.ofMinutes(5));
-                Media media = new Media(resolveMimeType(document.getFileUrl()), URI.create(presignedUrl));
-                String text = document.getRawText() != null && !document.getRawText().isBlank()
-                        ? document.getRawText()
+            if (event.getFileUrl() != null && !event.getFileUrl().isBlank()) {
+                String presignedUrl = fileStorageService.generatePresignedUrl(event.getFileUrl(), Duration.ofMinutes(5));
+                Media media = new Media(resolveMimeType(event.getFileUrl()), URI.create(presignedUrl));
+                String text = event.getRawText() != null && !event.getRawText().isBlank()
+                        ? event.getRawText()
                         : "Extract expense information from this document.";
                 response = expenseService.queryWithMedia(
-                        text, List.of(media), user, document.getId());
+                        text, List.of(media), user, event.getId());
             } else {
                 response = expenseService.query(
-                        document.getRawText(), user, document.getId());
+                        event.getRawText(), user, event.getId());
             }
-            updateStatus(document, DocumentProcessingStatus.PROCESSED, response);
+            updateStatus(event, DocumentProcessingStatus.PROCESSED, response);
         } catch (Exception e) {
-            log.error("Failed to process document {}", event.documentId(), e);
-            updateStatus(document, DocumentProcessingStatus.FAILED, "Failed to process document");
+            log.error("Failed to process document {}", event.getId(), e);
+            updateStatus(event, DocumentProcessingStatus.FAILED, "Failed to process document");
         }
     }
 
