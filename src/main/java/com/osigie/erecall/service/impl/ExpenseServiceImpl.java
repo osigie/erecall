@@ -9,6 +9,7 @@ import com.osigie.erecall.exception.BadRequestException;
 import com.osigie.erecall.exception.ResourceNotFoundException;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.ExpenseRepository;
+import com.osigie.erecall.repo.projection.DocumentExpenseProjection;
 import com.osigie.erecall.service.ExpenseService;
 import com.osigie.erecall.service.ExpenseTools;
 import lombok.extern.slf4j.Slf4j;
@@ -95,15 +96,10 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public StatusResponse getDocumentStatus(UUID documentId, User user) {
-        ExpenseDocument document = expenseDocumentRepository.findByIdAndCreator(documentId, user)
+
+        DocumentExpenseProjection document = expenseDocumentRepository.findByStatus(documentId, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
-        ExpenseData expenseData = document.getProcessingStatus() == DocumentProcessingStatus.PROCESSED
-                ? expenseRepository.findByExpenseDocumentId(documentId)
-                  .map(ExpenseData::from)
-                  .orElse(null)
-                : null;
-
-        return new StatusResponse(document.getId(), document.getProcessingStatus(), document.getAiResponse(), expenseData);
+        return new StatusResponse(document.documentId(), document.status(), document.aiResponse(), ExpenseData.from(document.expense()));
     }
 }

@@ -26,7 +26,6 @@ import java.util.UUID;
 
 
 @Service
-//TODO: explore the logging advice later
 @Slf4j
 public class ExpenseToolsImpl implements ExpenseTools {
     private final ExpenseRepository expenseRepository;
