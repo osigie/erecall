@@ -26,6 +26,9 @@ public class User implements UserDetails {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Column(name = "username", nullable = false)
+    private String username;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 
@@ -55,10 +58,11 @@ public class User implements UserDetails {
 
 
     @Builder
-    public User(String email, String passwordHash, Role role) {
+    public User(String email, String passwordHash, String username, Role role) {
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.username = username;
     }
 
     public enum Role {

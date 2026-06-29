@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
-
 @RestController
 @RequestMapping("/api/v1/expenses")
 public class ExpenseController {
@@ -25,9 +24,9 @@ public class ExpenseController {
 
     @PostMapping
     public ResponseEntity<BaseResponse<ExpenseDTO.SubmitResponse>> submit(@RequestBody ExpenseDTO.Request request) {
-        ExpenseDocument expenseDocument = ExpenseDTO.fromRequest(request);
-        expenseDocument.setCreator(authHelper.getAuthenticatedUser());
-        ExpenseDTO.SubmitResponse response = expenseService.saveExpenseDocument(expenseDocument);
+        ExpenseDocument document = request.toDocument();
+        document.setCreator(authHelper.getAuthenticatedUser());
+        ExpenseDTO.SubmitResponse response = expenseService.saveExpenseDocument(document);
         return ResponseEntity.ok(BaseResponse.success(response));
     }
 

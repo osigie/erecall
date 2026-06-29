@@ -1,7 +1,6 @@
 package com.osigie.erecall.domain.entity;
 
 import com.osigie.erecall.domain.DocumentProcessingStatus;
-import com.osigie.erecall.domain.DocumentType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -21,10 +20,6 @@ public class ExpenseDocument {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "document_type", nullable = false, length = 50)
-    private DocumentType type;
 
     @Column(name = "raw_text", columnDefinition = "TEXT")
     private String rawText;
@@ -56,12 +51,11 @@ public class ExpenseDocument {
 
 
     @Builder
-    public ExpenseDocument(String aiResponse, String rawText, String fileUrl, DocumentType type, User creator) {
+    public ExpenseDocument(String aiResponse, String rawText, String fileUrl, User creator) {
         this.rawText = rawText;
         this.fileUrl = fileUrl;
         this.processingStatus = DocumentProcessingStatus.PENDING;
         this.creator = creator;
-        this.type = type;
         this.aiResponse = aiResponse;
     }
 
