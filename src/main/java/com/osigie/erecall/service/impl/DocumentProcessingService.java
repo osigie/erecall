@@ -1,33 +1,38 @@
 package com.osigie.erecall.service.impl;
 
 import com.osigie.erecall.domain.DocumentProcessingStatus;
-import com.osigie.erecall.domain.DocumentType;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.event.DocumentSavedEvent;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.service.ExpenseService;
-import com.osigie.erecall.service.FileExtractionService;
+import com.osigie.erecall.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.content.Media;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+import org.springframework.util.MimeType;
+import org.springframework.util.MimeTypeUtils;
+
+import java.net.URI;
+import java.time.Duration;
+import java.util.List;
 
 @Service
 @Slf4j
 public class DocumentProcessingService {
 
-
     private final ExpenseDocumentRepository expenseDocumentRepository;
-    private final FileExtractionService fileExtractionService;
     private final ExpenseService expenseService;
+    private final FileStorageService fileStorageService;
 
     public DocumentProcessingService(ExpenseDocumentRepository expenseDocumentRepository,
-                                     FileExtractionService fileExtractionService,
-                                     ExpenseService expenseService) {
+                                     ExpenseService expenseService,
+                                     FileStorageService fileStorageService) {
         this.expenseDocumentRepository = expenseDocumentRepository;
-        this.fileExtractionService = fileExtractionService;
         this.expenseService = expenseService;
+        this.fileStorageService = fileStorageService;
     }
 
     @Async("documentProcessingExecutor")
@@ -39,8 +44,19 @@ public class DocumentProcessingService {
             return;
         }
         try {
-            String text = extractText(document);
-            String response = expenseService.query(text, document.getCreator().getId(), document.getId());
+            String response;
+            if (document.getFileUrl() != null && !document.getFileUrl().isBlank()) {
+                String presignedUrl = fileStorageService.generatePresignedUrl(document.getFileUrl(), Duration.ofMinutes(5));
+                Media media = new Media(resolveMimeType(document.getFileUrl()), URI.create(presignedUrl));
+                String text = document.getRawText() != null && !document.getRawText().isBlank()
+                        ? document.getRawText()
+                        : "Extract expense information from this document.";
+                response = expenseService.queryWithMedia(
+                        text, List.of(media), document.getCreator().getId(), document.getId());
+            } else {
+                response = expenseService.query(
+                        document.getRawText(), document.getCreator().getId(), document.getId());
+            }
             updateStatus(document, DocumentProcessingStatus.PROCESSED, response);
         } catch (Exception e) {
             log.error("Failed to process document {}", event.documentId(), e);
@@ -54,11 +70,11 @@ public class DocumentProcessingService {
         expenseDocumentRepository.save(document);
     }
 
-    private String extractText(ExpenseDocument document) {
-        if (document.getType() == DocumentType.PDF) {
-            updateStatus(document, DocumentProcessingStatus.PROCESSING, document.getAiResponse());
-            return fileExtractionService.extractText(document.getFileUrl());
-        }
-        return document.getRawText();
+    private MimeType resolveMimeType(String fileUrl) {
+        String lower = fileUrl.toLowerCase();
+        if (lower.endsWith(".pdf")) return MimeTypeUtils.parseMimeType("application/pdf");
+        if (lower.endsWith(".png")) return MimeTypeUtils.IMAGE_PNG;
+        if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return MimeTypeUtils.IMAGE_JPEG;
+        return MimeTypeUtils.parseMimeType("application/pdf");
     }
 }

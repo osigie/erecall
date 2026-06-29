@@ -14,11 +14,13 @@ import com.osigie.erecall.service.ExpenseTools;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.content.Media;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -56,22 +58,35 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
-    @Transactional
-    public SubmitResponse saveExpenseDocument(ExpenseDocument document) {
-        document = expenseDocumentRepository.save(document);
-
-        return switch (document.getType()) {
-            case TEXT -> emit(document, DocumentProcessingStatus.PROCESSING);
-            case PDF -> emit(document, DocumentProcessingStatus.PENDING);
-            default -> throw new BadRequestException("Document type not supported: " + document.getType());
-        };
+    public String queryWithMedia(String text, List<Media> media, UUID userId, UUID documentId) {
+        return chatClient.prompt()
+                .user(u -> u.text(text).media(media.toArray(new Media[0])))
+                .system(s -> s.params(Map.of("currentDateTime", LocalDateTime.now().toString())))
+                .advisors(a -> a.params(Map.of(ChatMemory.CONVERSATION_ID, userId.toString())))
+                .tools(tools)
+                .toolContext(Map.of("documentId", documentId, "userId", userId))
+                .call()
+                .content();
     }
 
-    private SubmitResponse emit(ExpenseDocument document, DocumentProcessingStatus status) {
-        document.setProcessingStatus(status);
+    @Override
+    @Transactional
+    public SubmitResponse saveExpenseDocument(ExpenseDocument document) {
+        validateDocument(document);
+
+        document = expenseDocumentRepository.save(document);
+        document.setProcessingStatus(DocumentProcessingStatus.PROCESSING);
         expenseDocumentRepository.save(document);
         eventPublisher.publishEvent(new DocumentSavedEvent(document.getId(), document.getCreator().getId()));
-        return new SubmitResponse(document.getId(), status, null);
+        return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSING, null);
+    }
+
+    private void validateDocument(ExpenseDocument document) {
+        boolean hasText = document.getRawText() != null && !document.getRawText().isBlank();
+        boolean hasFile = document.getFileUrl() != null && !document.getFileUrl().isBlank();
+        if (!hasText && !hasFile) {
+            throw new BadRequestException("Either rawText or fileUrl must be provided");
+        }
     }
 
     @Override

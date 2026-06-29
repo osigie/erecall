@@ -48,7 +48,7 @@ public class ExpenseToolsImpl implements ExpenseTools {
     @Override
     @Tool(description = "Save a new expense. Use when the user is recording, adding, or logging an expense.")
     public String saveExpense(
-            @ToolParam(required = false, description = "Merchant or vendor name, e.g. Netflix, Shell, Walmart") String merchant,
+            @ToolParam(required = false, description = "Merchant or vendor name, e.g. Netflix, Shell, Shoprite") String merchant,
             @ToolParam(description = "Amount paid, e.g. 500, 29.99") BigDecimal amount,
             @ToolParam(description = "What the expense was for, e.g. 'Netflix monthly subscription'") String description,
             @ToolParam(description = "Category of the expense, e.g. ENTERTAINMENT, GROCERIES") ExpenseCategory category,
