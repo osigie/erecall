@@ -15,6 +15,14 @@ public interface ExpenseDocumentRepository extends JpaRepository<ExpenseDocument
     Optional<ExpenseDocument> findByIdAndCreator(UUID id, User creator);
 
     @Query("""
+                SELECT ex
+                FROM ExpenseDocument ex
+                JOIN FETCH ex.creator
+                WHERE ex.id = :id
+            """)
+    Optional<ExpenseDocument> findByIdWithCreator(UUID id);
+
+    @Query("""
             SELECT d.id, d.processingStatus, d.aiResponse, e
             FROM ExpenseDocument d
             LEFT JOIN Expense e
