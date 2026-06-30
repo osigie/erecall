@@ -51,5 +51,29 @@ public class AuthControllerE2ETests extends AbstractIntegrationTest {
 
     }
 
+    @Test
+    public void givenRegisteredAccount_whenLogin_thenShouldReturnToken() throws Exception {
+//given - precondition or setup
+
+        RegisterRequest registerRequest = TestDataFactory.createRegisterRequest();
+
+        mockMvc.perform(post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(registerRequest)));
+
+        LoginRequest loginRequest = new LoginRequest();
+        loginRequest.setPassword(registerRequest.getPassword());
+        loginRequest.setEmail(registerRequest.getEmail());
+
+//when & then - action or behaviour that we are going to test
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").exists())
+                .andExpect(jsonPath("$.data.user.email").value(loginRequest.getEmail()));
+
+    }
+
 
 }

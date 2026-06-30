@@ -10,6 +10,12 @@ public class TestDataFactory {
         request.setPassword("Osigie@88");
         request.setEmail("kenosagie88@gmail.com");
         return request;
+    }
 
+    public static LoginRequest createLoginRequest() {
+        LoginRequest request = new LoginRequest();
+        request.setPassword("Osigie@88");
+        request.setEmail("kenosagie88@gmail.com");
+        return request;
     }
 }
