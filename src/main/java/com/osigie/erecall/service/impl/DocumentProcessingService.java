@@ -4,10 +4,7 @@ import com.osigie.erecall.domain.DocumentProcessingStatus;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.domain.entity.User;
 import com.osigie.erecall.event.DocumentSavedEvent;
-import com.osigie.erecall.exception.ResourceNotFoundException;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
-import com.osigie.erecall.repo.UserRepository;
-import com.osigie.erecall.security.AuthHelper;
 import com.osigie.erecall.service.ExpenseService;
 import com.osigie.erecall.service.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +22,7 @@ import java.util.List;
 
 @Service
 @Slf4j
+@org.springframework.context.annotation.Profile("!test")
 public class DocumentProcessingService {
 
     private final ExpenseDocumentRepository expenseDocumentRepository;
