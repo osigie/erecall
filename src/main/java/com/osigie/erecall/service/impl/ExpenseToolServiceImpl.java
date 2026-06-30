@@ -6,7 +6,7 @@ import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.ExpenseRepository;
 import com.osigie.erecall.repo.spec.ExpenseSpecification;
-import com.osigie.erecall.service.ExpenseTools;
+import com.osigie.erecall.service.ExpenseToolService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.model.ToolContext;
 import org.springframework.ai.document.Document;
@@ -27,13 +27,13 @@ import java.util.UUID;
 
 @Service
 @Slf4j
-public class ExpenseToolsImpl implements ExpenseTools {
+public class ExpenseToolServiceImpl implements ExpenseToolService {
     private final ExpenseRepository expenseRepository;
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final VectorStore vectorStore;
 
 
-    public ExpenseToolsImpl(ExpenseRepository expenseRepository, ExpenseDocumentRepository expenseDocumentRepository, VectorStore vectorStore) {
+    public ExpenseToolServiceImpl(ExpenseRepository expenseRepository, ExpenseDocumentRepository expenseDocumentRepository, VectorStore vectorStore) {
         this.expenseRepository = expenseRepository;
         this.expenseDocumentRepository = expenseDocumentRepository;
         this.vectorStore = vectorStore;

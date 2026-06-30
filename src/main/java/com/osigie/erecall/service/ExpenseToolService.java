@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface ExpenseTools {
+public interface ExpenseToolService {
 
     String saveExpense(String merchant, BigDecimal amount, String description, ExpenseCategory category, LocalDateTime expenseDate, ToolContext toolContext);
 

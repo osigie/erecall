@@ -10,7 +10,7 @@ import com.osigie.erecall.exception.ResourceNotFoundException;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
 import com.osigie.erecall.repo.projection.DocumentExpenseProjection;
 import com.osigie.erecall.service.ExpenseService;
-import com.osigie.erecall.service.ExpenseTools;
+import com.osigie.erecall.service.ExpenseToolService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.memory.ChatMemory;
@@ -29,11 +29,11 @@ import java.util.UUID;
 public class ExpenseServiceImpl implements ExpenseService {
 
     private final ChatClient chatClient;
-    private final ExpenseTools tools;
+    private final ExpenseToolService tools;
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    public ExpenseServiceImpl(ChatClient chatClient, ExpenseTools tools,
+    public ExpenseServiceImpl(ChatClient chatClient, ExpenseToolService tools,
                               ExpenseDocumentRepository expenseDocumentRepository,
                               ApplicationEventPublisher eventPublisher) {
         this.chatClient = chatClient;
