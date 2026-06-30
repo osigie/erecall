@@ -29,10 +29,5 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.password", POSTGRES_CONTAINER::getPassword);
         registry.add("spring.ai.vectorstore.qdrant.host", QDRANT_CONTAINER::getHost);
         registry.add("spring.ai.vectorstore.qdrant.port", () -> String.valueOf(QDRANT_CONTAINER.getGrpcPort()));
-        registry.add("app.storage.s3.endpoint", () -> "http://localhost:9000");
-        registry.add("app.storage.s3.region", () -> "us-east-1");
-        registry.add("app.storage.s3.access-key", () -> "minioadmin");
-        registry.add("app.storage.s3.secret-key", () -> "minioadmin");
-        registry.add("app.storage.s3.bucket-name", () -> "test-bucket");
     }
 }

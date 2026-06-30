@@ -6,6 +6,7 @@ import com.osigie.erecall.dto.BaseResponse;
 import com.osigie.erecall.security.AuthHelper;
 import com.osigie.erecall.service.AuthService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<BaseResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         AuthResponse authResponse = authService.register(request);
-        return ResponseEntity.ok(BaseResponse.success(authResponse));
+        return new ResponseEntity<>(BaseResponse.success(authResponse), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")

@@ -1,0 +1,62 @@
+spring:
+  application:
+    name: erecall
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        use_sql_comments: true
+        highlight_sql: true
+  ai:
+    google:
+      genai:
+        api-key: gemini-api-key
+        project-id: gemini-project-id
+        embedding:
+          api-key: gemini-api-key
+          project-id: gemini-project-id
+    vectorstore:
+      qdrant:
+        host: localhost
+        port: 6334
+        collection-name: expenses
+        use-tls: false
+        initialize-schema: true
+    chat:
+      memory:
+        repository:
+          jdbc:
+            initialize-schema: always
+app:
+  jwt:
+    secret: a-test-secret-key-that-is-at-least-256-bits-long-because-of-jwt
+    access-token-expiry: 604800000    # 7 days
+  storage:
+    s3:
+      endpoint: http://localhost:9000
+      region: us-east-1
+      access-key: minioadmin
+      secret-key: minioadmin
+      bucket-name: test-bucket
+
+
+logging:
+  level:
+    com.osigie: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
