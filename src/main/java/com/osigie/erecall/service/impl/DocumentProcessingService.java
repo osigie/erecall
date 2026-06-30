@@ -30,15 +30,13 @@ public class DocumentProcessingService {
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final ExpenseService expenseService;
     private final FileStorageService fileStorageService;
-    private final UserRepository userRepository;
 
     public DocumentProcessingService(ExpenseDocumentRepository expenseDocumentRepository,
                                      ExpenseService expenseService,
-                                     FileStorageService fileStorageService, UserRepository userRepository) {
+                                     FileStorageService fileStorageService) {
         this.expenseDocumentRepository = expenseDocumentRepository;
         this.expenseService = expenseService;
         this.fileStorageService = fileStorageService;
-        this.userRepository = userRepository;
     }
 
     @Async("documentProcessingExecutor")

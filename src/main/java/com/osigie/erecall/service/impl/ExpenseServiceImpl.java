@@ -4,6 +4,7 @@ import com.osigie.erecall.domain.DocumentProcessingStatus;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.domain.entity.User;
 import com.osigie.erecall.dto.ExpenseDTO.*;
+import com.osigie.erecall.event.DocumentSavedEvent;
 import com.osigie.erecall.exception.BadRequestException;
 import com.osigie.erecall.exception.ResourceNotFoundException;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
@@ -77,7 +78,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
         expenseDocumentRepository.save(document);
 
-        eventPublisher.publishEvent(document);
+        eventPublisher.publishEvent(new DocumentSavedEvent(document.getId(), document.getCreator().getId()));
 
         return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSING);
     }
