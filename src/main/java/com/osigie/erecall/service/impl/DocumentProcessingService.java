@@ -30,33 +30,32 @@ public class DocumentProcessingService {
     private final ExpenseDocumentRepository expenseDocumentRepository;
     private final ExpenseService expenseService;
     private final FileStorageService fileStorageService;
-    private final AuthHelper authHelper;
     private final UserRepository userRepository;
 
     public DocumentProcessingService(ExpenseDocumentRepository expenseDocumentRepository,
                                      ExpenseService expenseService,
-                                     FileStorageService fileStorageService, AuthHelper authHelper, UserRepository userRepository) {
+                                     FileStorageService fileStorageService, UserRepository userRepository) {
         this.expenseDocumentRepository = expenseDocumentRepository;
         this.expenseService = expenseService;
         this.fileStorageService = fileStorageService;
-        this.authHelper = authHelper;
         this.userRepository = userRepository;
     }
 
     @Async("documentProcessingExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void handleDocumentSaved(DocumentSavedEvent event) {
-        ExpenseDocument document = expenseDocumentRepository.findById(event.documentId()).orElse(null);
+        ExpenseDocument document = expenseDocumentRepository.findByIdWithCreator(event.documentId()).orElse(null);
+
         if (document == null) {
             log.warn("Document {} not found for processing", event.documentId());
             return;
         }
 
-        User user = userRepository.findById(document.getCreator().getId()).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = document.getCreator();
 
         try {
             String response;
-            if (document.getFileUrl() != null && !document.getFileUrl().isBlank()) {
+            if (hasFile(document)) {
                 String presignedUrl = fileStorageService.generatePresignedUrl(document.getFileUrl(), Duration.ofMinutes(5));
                 Media media = new Media(resolveMimeType(document.getFileUrl()), URI.create(presignedUrl));
                 String text = document.getRawText() != null && !document.getRawText().isBlank()
@@ -73,6 +72,10 @@ public class DocumentProcessingService {
             log.error("Failed to process document {}", event.documentId(), e);
             updateStatus(document, DocumentProcessingStatus.FAILED, "Failed to process document");
         }
+    }
+
+    private boolean hasFile(ExpenseDocument event) {
+        return event.getFileUrl() != null && !event.getFileUrl().isBlank();
     }
 
     private void updateStatus(ExpenseDocument document, DocumentProcessingStatus status, String response) {

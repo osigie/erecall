@@ -4,11 +4,10 @@ import com.osigie.erecall.domain.DocumentProcessingStatus;
 import com.osigie.erecall.domain.entity.ExpenseDocument;
 import com.osigie.erecall.domain.entity.User;
 import com.osigie.erecall.dto.ExpenseDTO.*;
-import com.osigie.erecall.event.DocumentSavedEvent;
 import com.osigie.erecall.exception.BadRequestException;
 import com.osigie.erecall.exception.ResourceNotFoundException;
 import com.osigie.erecall.repo.ExpenseDocumentRepository;
-import com.osigie.erecall.repo.ExpenseRepository;
+import com.osigie.erecall.repo.projection.DocumentExpenseProjection;
 import com.osigie.erecall.service.ExpenseService;
 import com.osigie.erecall.service.ExpenseTools;
 import lombok.extern.slf4j.Slf4j;
@@ -31,17 +30,14 @@ public class ExpenseServiceImpl implements ExpenseService {
     private final ChatClient chatClient;
     private final ExpenseTools tools;
     private final ExpenseDocumentRepository expenseDocumentRepository;
-    private final ExpenseRepository expenseRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     public ExpenseServiceImpl(ChatClient chatClient, ExpenseTools tools,
                               ExpenseDocumentRepository expenseDocumentRepository,
-                              ExpenseRepository expenseRepository,
                               ApplicationEventPublisher eventPublisher) {
         this.chatClient = chatClient;
         this.tools = tools;
         this.expenseDocumentRepository = expenseDocumentRepository;
-        this.expenseRepository = expenseRepository;
         this.eventPublisher = eventPublisher;
     }
 
@@ -77,12 +73,13 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Transactional
     public SubmitResponse saveExpenseDocument(ExpenseDocument document) {
         validateDocument(document);
-
-        document = expenseDocumentRepository.save(document);
         document.setProcessingStatus(DocumentProcessingStatus.PROCESSING);
+
         expenseDocumentRepository.save(document);
-        eventPublisher.publishEvent(new DocumentSavedEvent(document.getId(), document.getCreator().getId()));
-        return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSING, null);
+
+        eventPublisher.publishEvent(document);
+
+        return new SubmitResponse(document.getId(), DocumentProcessingStatus.PROCESSING);
     }
 
     private void validateDocument(ExpenseDocument document) {
@@ -95,15 +92,14 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     public StatusResponse getDocumentStatus(UUID documentId, User user) {
-        ExpenseDocument document = expenseDocumentRepository.findByIdAndCreator(documentId, user)
+
+        DocumentExpenseProjection document = expenseDocumentRepository.findByStatus(documentId, user)
                 .orElseThrow(() -> new ResourceNotFoundException("Document not found"));
 
-        ExpenseData expenseData = document.getProcessingStatus() == DocumentProcessingStatus.PROCESSED
-                ? expenseRepository.findByExpenseDocumentId(documentId)
-                  .map(ExpenseData::from)
-                  .orElse(null)
+        ExpenseData expenseData = document.expense() != null
+                ? ExpenseData.from(document.expense())
                 : null;
 
-        return new StatusResponse(document.getId(), document.getProcessingStatus(), document.getAiResponse(), expenseData);
+        return new StatusResponse(document.documentId(), document.status(), document.aiResponse(), expenseData);
     }
 }
