@@ -7,7 +7,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -15,5 +14,4 @@ public interface ExpenseRepository extends JpaRepository<Expense, UUID>, JpaSpec
 
     List<Expense> findByExpenseDocumentCreatorIdAndExpenseDateBetween(UUID userId, LocalDateTime startDate, LocalDateTime endDate);
 
-    Optional<Expense> findByExpenseDocumentId(UUID expenseDocumentId);
 }

@@ -23,7 +23,9 @@ public interface ExpenseDocumentRepository extends JpaRepository<ExpenseDocument
     Optional<ExpenseDocument> findByIdWithCreator(UUID id);
 
     @Query("""
-            SELECT d.id, d.processingStatus, d.aiResponse, e
+            SELECT new com.osigie.erecall.repo.projection.DocumentExpenseProjection(
+                d.id, d.processingStatus, d.aiResponse, e
+            )
             FROM ExpenseDocument d
             LEFT JOIN Expense e
             ON e.expenseDocument.id = d.id

@@ -15,8 +15,12 @@ public class AuthDTO {
         @Email(message = "Invalid email format")
         private String email;
 
-        //TODO: consider proper validatiopn
         @NotBlank(message = "Username is required")
+        @Size(min = 3, max = 20, message = "Username must be between 3 and 20 characters")
+        @Pattern(
+                regexp = "^[a-zA-Z0-9_]+$",
+                message = "Username can only contain letters, numbers, and underscores"
+        )
         private String username;
 
         @NotBlank(message = "Password is required")
