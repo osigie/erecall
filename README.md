@@ -33,26 +33,13 @@ cd erecall
 
 ### Environment Variables
 
+Copy `.env.example` to `.env` and fill in your values:
+
 ```bash
-# Database (Postgres)
-export SPRING_DATASOURCE_URL="jdbc:postgresql://localhost:5432/erecall"
-export SPRING_DATASOURCE_USERNAME="erecall"
-export SPRING_DATASOURCE_PASSWORD="your-password"
-
-# Gemini AI
-export GEMINI_API_KEY="your-gemini-api-key"
-export GEMINI_PROJECT_ID="your-gcp-project-id"
-
-# JWT
-export JWT_SECRET="your-256-bit-secret"
-
-# S3-compatible storage
-export S3_ENDPOINT="https://your-s3-endpoint"
-export S3_REGION="us-east-1"
-export S3_ACCESS_KEY="your-access-key"
-export S3_SECRET_KEY="your-secret-key"
-export S3_BUCKET_NAME="erecall-uploads"
+cp .env.example .env
 ```
+
+See `.env.example` for all required variables — includes database, Gemini AI, JWT, and S3-compatible storage credentials.
 
 ## Usage
 
