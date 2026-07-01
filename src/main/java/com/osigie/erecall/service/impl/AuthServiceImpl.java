@@ -13,74 +13,73 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-
 @Service
 public class AuthServiceImpl implements AuthService {
 
-    private final UserRepository userRepository;
-    private final JwtService jwtService;
-    private final PasswordEncoder passwordEncoder;
-    private final AuthenticationManager authenticationManager;
+  private final UserRepository userRepository;
+  private final JwtService jwtService;
+  private final PasswordEncoder passwordEncoder;
+  private final AuthenticationManager authenticationManager;
 
-    public AuthServiceImpl(UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder, AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
-        this.passwordEncoder = passwordEncoder;
-        this.authenticationManager = authenticationManager;
+  public AuthServiceImpl(
+      UserRepository userRepository,
+      JwtService jwtService,
+      PasswordEncoder passwordEncoder,
+      AuthenticationManager authenticationManager) {
+    this.userRepository = userRepository;
+    this.jwtService = jwtService;
+    this.passwordEncoder = passwordEncoder;
+    this.authenticationManager = authenticationManager;
+  }
+
+  private UserInfo createUserInfo(User user) {
+    UserInfo info = new UserInfo();
+    info.setId(user.getId().toString());
+    info.setEmail(user.getEmail());
+    info.setRole(user.getRole().name());
+    return info;
+  }
+
+  @Transactional
+  public AuthResponse register(RegisterRequest request) {
+    if (userRepository.existsByEmail(request.getEmail())) {
+      throw new BadRequestException("Email already registered");
     }
 
-    private UserInfo createUserInfo(User user) {
-        UserInfo info = new UserInfo();
-        info.setId(user.getId().toString());
-        info.setEmail(user.getEmail());
-        info.setRole(user.getRole().name());
-        return info;
-    }
+    User user =
+        User.builder()
+            .email(request.getEmail())
+            .passwordHash(passwordEncoder.encode(request.getPassword()))
+            .username(request.getUsername())
+            .role(User.Role.USER)
+            .build();
 
-    @Transactional
-    public AuthResponse register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BadRequestException("Email already registered");
-        }
+    user = userRepository.save(user);
 
-        User user = User.builder()
-                .email(request.getEmail())
-                .passwordHash(passwordEncoder.encode(request.getPassword()))
-                .username(request.getUsername())
-                .role(User.Role.USER)
-                .build();
+    String accessToken =
+        jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
 
-        user = userRepository.save(user);
+    AuthResponse response = new AuthResponse(accessToken, jwtService.getAccessTokenExpiry());
 
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
+    response.setUser(createUserInfo(user));
+    return response;
+  }
 
-        AuthResponse response = new AuthResponse(
-                accessToken,
-                jwtService.getAccessTokenExpiry()
-        );
+  @Transactional
+  public AuthResponse login(LoginRequest request) {
+    authenticationManager.authenticate(
+        new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
 
-        response.setUser(createUserInfo(user));
-        return response;
-    }
+    User user =
+        userRepository
+            .findByEmail(request.getEmail())
+            .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
-    @Transactional
-    public AuthResponse login(LoginRequest request) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+    String accessToken =
+        jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
 
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
-
-        String accessToken = jwtService.generateAccessToken(user.getId(), user.getEmail(), user.getRole().name());
-
-        AuthResponse response = new AuthResponse(
-                accessToken,
-                jwtService.getAccessTokenExpiry()
-        );
-        response.setUser(createUserInfo(user));
-        return response;
-    }
-
-
+    AuthResponse response = new AuthResponse(accessToken, jwtService.getAccessTokenExpiry());
+    response.setUser(createUserInfo(user));
+    return response;
+  }
 }

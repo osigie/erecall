@@ -12,25 +12,28 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class AuthHelper {
 
-    private final UserRepository userRepository;
+  private final UserRepository userRepository;
 
-    public User getAuthenticatedUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            throw new IllegalStateException("No authenticated user found");
-        }
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof User user) {
-            return user;
-        }
-        if (principal instanceof String email) {
-            return userRepository.findByEmail(email)
-                    .orElseThrow(() -> new IllegalStateException("User not found: " + email));
-        }
-        if (principal instanceof UserDetails userDetails) {
-            return userRepository.findByEmail(userDetails.getUsername())
-                    .orElseThrow(() -> new IllegalStateException("User not found: " + userDetails.getUsername()));
-        }
-        throw new IllegalStateException("No authenticated user found");
+  public User getAuthenticatedUser() {
+    Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+    if (authentication == null) {
+      throw new IllegalStateException("No authenticated user found");
     }
+    Object principal = authentication.getPrincipal();
+    if (principal instanceof User user) {
+      return user;
+    }
+    if (principal instanceof String email) {
+      return userRepository
+          .findByEmail(email)
+          .orElseThrow(() -> new IllegalStateException("User not found: " + email));
+    }
+    if (principal instanceof UserDetails userDetails) {
+      return userRepository
+          .findByEmail(userDetails.getUsername())
+          .orElseThrow(
+              () -> new IllegalStateException("User not found: " + userDetails.getUsername()));
+    }
+    throw new IllegalStateException("No authenticated user found");
+  }
 }

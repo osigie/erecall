@@ -1,21 +1,20 @@
 package com.osigie.erecall.domain;
 
 public enum ExpenseCategory {
+  GROCERIES,
+  DINING_OUT,
 
-    GROCERIES,
-    DINING_OUT,
+  FUEL,
+  TRANSIT,
 
-    FUEL,
-    TRANSIT,
+  RENT,
+  UTILITIES,
 
-    RENT,
-    UTILITIES,
+  HEALTHCARE,
 
-    HEALTHCARE,
+  ENTERTAINMENT,
 
-    ENTERTAINMENT,
+  WORK_EXPENSES,
 
-    WORK_EXPENSES,
-
-    MISCELLANEOUS;
+  MISCELLANEOUS;
 }

@@ -5,34 +5,35 @@ import com.osigie.erecall.dto.BaseResponse;
 import com.osigie.erecall.dto.ExpenseDTO;
 import com.osigie.erecall.security.AuthHelper;
 import com.osigie.erecall.service.ExpenseService;
+import java.util.UUID;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/expenses")
 public class ExpenseController {
 
-    private final ExpenseService expenseService;
-    private final AuthHelper authHelper;
+  private final ExpenseService expenseService;
+  private final AuthHelper authHelper;
 
-    public ExpenseController(ExpenseService expenseService, AuthHelper authHelper) {
-        this.expenseService = expenseService;
-        this.authHelper = authHelper;
-    }
+  public ExpenseController(ExpenseService expenseService, AuthHelper authHelper) {
+    this.expenseService = expenseService;
+    this.authHelper = authHelper;
+  }
 
-    @PostMapping
-    public ResponseEntity<BaseResponse<ExpenseDTO.SubmitResponse>> submit(@RequestBody ExpenseDTO.Request request) {
-        ExpenseDocument document = request.toDocument();
-        document.setCreator(authHelper.getAuthenticatedUser());
-        ExpenseDTO.SubmitResponse response = expenseService.saveExpenseDocument(document);
-        return ResponseEntity.ok(BaseResponse.success(response));
-    }
+  @PostMapping
+  public ResponseEntity<BaseResponse<ExpenseDTO.SubmitResponse>> submit(
+      @RequestBody ExpenseDTO.Request request) {
+    ExpenseDocument document = request.toDocument();
+    document.setCreator(authHelper.getAuthenticatedUser());
+    ExpenseDTO.SubmitResponse response = expenseService.saveExpenseDocument(document);
+    return ResponseEntity.ok(BaseResponse.success(response));
+  }
 
-    @GetMapping("/{id}/status")
-    public ResponseEntity<BaseResponse<ExpenseDTO.StatusResponse>> getStatus(@PathVariable UUID id) {
-        ExpenseDTO.StatusResponse response = expenseService.getDocumentStatus(id, authHelper.getAuthenticatedUser());
-        return ResponseEntity.ok(BaseResponse.success(response));
-    }
+  @GetMapping("/{id}/status")
+  public ResponseEntity<BaseResponse<ExpenseDTO.StatusResponse>> getStatus(@PathVariable UUID id) {
+    ExpenseDTO.StatusResponse response =
+        expenseService.getDocumentStatus(id, authHelper.getAuthenticatedUser());
+    return ResponseEntity.ok(BaseResponse.success(response));
+  }
 }

@@ -1,17 +1,16 @@
 package com.osigie.erecall.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
-import org.jspecify.annotations.NonNull;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import lombok.*;
+import org.jspecify.annotations.NonNull;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 @Entity
 @Table(name = "users")
@@ -19,73 +18,73 @@ import java.util.UUID;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User implements UserDetails {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+  @Id
+  @GeneratedValue(strategy = GenerationType.UUID)
+  private UUID id;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+  @Column(nullable = false, unique = true)
+  private String email;
 
-    @Column(name = "username", nullable = false)
-    private String username;
+  @Column(name = "username", nullable = false)
+  private String username;
 
-    @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+  @Column(name = "password_hash", nullable = false)
+  private String passwordHash;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Role role;
 
-    @Setter
-    @Column(name = "email_verified", nullable = false)
-    private Boolean emailVerified = false;
+  @Setter
+  @Column(name = "email_verified", nullable = false)
+  private Boolean emailVerified = false;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private OffsetDateTime createdAt;
+  @Column(name = "created_at", nullable = false, updatable = false)
+  private OffsetDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
-    }
+  @PrePersist
+  public void prePersist() {
+    this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
+  }
 
-    @Column(name = "updated_at")
-    private OffsetDateTime updatedAt;
+  @Column(name = "updated_at")
+  private OffsetDateTime updatedAt;
 
-    @PreUpdate
-    public void preUpdate() {
-        this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
-    }
+  @PreUpdate
+  public void preUpdate() {
+    this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
+  }
 
+  @Builder
+  public User(String email, String passwordHash, String username, Role role) {
+    this.email = email;
+    this.passwordHash = passwordHash;
+    this.role = role;
+    this.username = username;
+  }
 
-    @Builder
-    public User(String email, String passwordHash, String username, Role role) {
-        this.email = email;
-        this.passwordHash = passwordHash;
-        this.role = role;
-        this.username = username;
-    }
+  public enum Role {
+    USER,
+    ADMIN
+  }
 
-    public enum Role {
-        USER, ADMIN
-    }
+  @Override
+  public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
+    return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
+  }
 
-    @Override
-    public @NonNull Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
+  @Override
+  public String getPassword() {
+    return passwordHash;
+  }
 
-    @Override
-    public String getPassword() {
-        return passwordHash;
-    }
+  @Override
+  public @NonNull String getUsername() {
+    return email;
+  }
 
-    @Override
-    public @NonNull String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return emailVerified;
-    }
+  @Override
+  public boolean isEnabled() {
+    return emailVerified;
+  }
 }
