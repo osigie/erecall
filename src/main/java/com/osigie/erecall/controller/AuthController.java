@@ -14,35 +14,35 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
 
-    private final AuthService authService;
-    private final AuthHelper authHelper;
+  private final AuthService authService;
+  private final AuthHelper authHelper;
 
-    public AuthController(AuthService authService, AuthHelper authHelper) {
-        this.authService = authService;
-        this.authHelper = authHelper;
-    }
+  public AuthController(AuthService authService, AuthHelper authHelper) {
+    this.authService = authService;
+    this.authHelper = authHelper;
+  }
 
-    @PostMapping("/register")
-    public ResponseEntity<BaseResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
-        AuthResponse authResponse = authService.register(request);
-        return new ResponseEntity<>(BaseResponse.success(authResponse), HttpStatus.CREATED);
-    }
+  @PostMapping("/register")
+  public ResponseEntity<BaseResponse<AuthResponse>> register(
+      @Valid @RequestBody RegisterRequest request) {
+    AuthResponse authResponse = authService.register(request);
+    return new ResponseEntity<>(BaseResponse.success(authResponse), HttpStatus.CREATED);
+  }
 
-    @PostMapping("/login")
-    public ResponseEntity<BaseResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse authResponse = authService.login(request);
-        return ResponseEntity.ok(BaseResponse.success(authResponse));
-    }
+  @PostMapping("/login")
+  public ResponseEntity<BaseResponse<AuthResponse>> login(
+      @Valid @RequestBody LoginRequest request) {
+    AuthResponse authResponse = authService.login(request);
+    return ResponseEntity.ok(BaseResponse.success(authResponse));
+  }
 
-
-    @GetMapping("/me")
-    public ResponseEntity<BaseResponse<UserInfo>> me() {
-        User user = authHelper.getAuthenticatedUser();
-        UserInfo userInfo = new UserInfo();
-        userInfo.setId(user.getId().toString());
-        userInfo.setEmail(user.getEmail());
-        userInfo.setRole(user.getRole().name());
-        return ResponseEntity.ok(BaseResponse.success(userInfo));
-    }
-
+  @GetMapping("/me")
+  public ResponseEntity<BaseResponse<UserInfo>> me() {
+    User user = authHelper.getAuthenticatedUser();
+    UserInfo userInfo = new UserInfo();
+    userInfo.setId(user.getId().toString());
+    userInfo.setEmail(user.getEmail());
+    userInfo.setRole(user.getRole().name());
+    return ResponseEntity.ok(BaseResponse.success(userInfo));
+  }
 }
