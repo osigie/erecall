@@ -170,7 +170,7 @@
 				<version>3.5.1</version>
 				<configuration>
 					<to>
-						<image>osigie4488/${project.artifactId}:01</image>
+						<image>osigie4488/${project.artifactId}:1.0.0</image>
 					</to>
 					<from>
 						<platforms>
