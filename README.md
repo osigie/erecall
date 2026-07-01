@@ -1,5 +1,7 @@
 # erecall
 
+[MIT](LICENCE)
+
 An intelligent expense tracking system powered by Gemini AI. Submit expenses via text or document (PDF/JPEG/PNG), and the AI automatically extracts merchant, amount, category, and description. Ask questions about your spending in plain English — "how much did I spend on dining last month?" or "what did I buy at Amazon?" — and get answers instantly.
 
 ## How It Works
